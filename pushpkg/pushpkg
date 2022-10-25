@@ -5,6 +5,22 @@ import os
 import subprocess
 import sys
 
+# Hostname
+hostname = "access.oss.cipunited.com"
+
+# Port
+port = 20122
+
+# rsync SSH command
+ssh_cmd = f"ssh -p{port}"
+
+# Path to the repository (without trailing slash)
+repo_path = "/srv/repo/aosc-mipsr6"
+
+# Options
+verbose = False
+delete = False
+retro = False # This can't be true though
 
 def main():
     parser = argparse.ArgumentParser(
@@ -65,7 +81,7 @@ def detect_and_ask(type_name: str, arg: str) -> str:
 
 
 def make_upload_url(username: str, branch: str, component: str, is_retro: bool) -> str:
-    return f"{username}@repo.aosc.io:/mirror/debs{'-retro' if is_retro else ''}/pool/{branch}/{component}/"
+    return f"{username}@{hostname}:{repo_path}/pool/{branch}/{component}/"
 
 
 def delete_junk():
@@ -73,22 +89,27 @@ def delete_junk():
     debs_path = os.path.abspath("./debs")
     command = ["sudo", "find", debs_path, "-maxdepth",
                "1", "-type", "f", "-delete", "-print"]
+    print(command)
+    if verbose:
+        print("[+] Executing command line:  '" + " ".join(command) + "'")
     subprocess.check_call(command)
 
 
 def mark_upload_done(username: str, verbose=False):
-    command = ["ssh", f"{username}@repo.aosc.io", "touch", "/mirror/.updated"]
+    command = ["ssh", f"-p{port}", f"{username}@{hostname}", "touch", f"{repo_path}/.updated"]
     if verbose:
         command.insert(1, "-v")
+        print("[+] Executing command line:  '" + " ".join(command) + "'")
     subprocess.check_call(command)
 
 
 def rsync_non_noarch_file(upload_url: str, verbose=False):
     print("[+] Uploading arch-specific packages ...")
-    command = ["rsync", "-rlOvhzPe", "ssh", "--mkpath", "--exclude",
+    command = ["rsync", "-rlOvhzPe", ssh_cmd, "--mkpath", "--exclude",
                "*_noarch.deb", "./debs/", upload_url]
     if verbose:
         command.insert(1, "-v")
+        print("[+] Executing command line:  '" + " ".join(command) + "'")
     subprocess.check_call(command)
 
 
@@ -100,12 +121,13 @@ def have_noarch_files() -> bool:
 
 def rsync_noarch_file(upload_url: str, verbose=False, force_push_noarch_package=False):
     print("[+] Uploading noarch packages ...")
-    command = ["rsync", "--ignore-existing", "-rlOvhzPe", "ssh", "--include",
+    command = ["rsync", "--ignore-existing", "-rlOvhzPe", ssh_cmd, "--include",
                "*_noarch.deb", "./debs/", upload_url]
     if force_push_noarch_package:
         del command[1]
     if verbose:
         command.insert(1, "-v")
+        print("[+] Executing command line:  '" + " ".join(command) + "'")
     subprocess.check_call(command)
 
 
