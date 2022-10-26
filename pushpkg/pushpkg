@@ -15,7 +15,7 @@ port = 20122
 ssh_cmd = f"ssh -p{port}"
 
 # Path to the repository (without trailing slash)
-repo_path = "/srv/repo/aosc-mipsr6"
+repo_path = "/srv/repo/aosc-mipsr6/debs"
 
 # Options
 verbose = False
