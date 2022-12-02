@@ -7,16 +7,24 @@ if [ ! -d "$TBBUILDDIR"/aosc-mkrawimg ]; then
 	git clone -b cip/boston https://github.com/AOSC-CIP-Pilot/aosc-mkrawimg
 fi
 
+if [[ "$MSA" != "1" ]]; then
+	MIPSR6ARCH=mips64r6el
+	SUBREPO=rolling
+else
+	MIPSR6ARCH=mips64r6el+msa
+	SUBREPO=rolling+msa
+fi
+
 for i in "$@"; do
 	echo "Generating system release: $i ..."
 	mkdir -pv os-mips64r6el/$i/rawimg
 	rm -rf $i
-	aoscbootstrap rolling $i http://127.0.0.1:8080/aosc-mipsr6/debs/ \
+	aoscbootstrap $SUBREPO $i http://127.0.0.1:8080/debs/ \
 		--config /usr/share/aoscbootstrap/config/aosc-mainline.toml \
 		-x --arch mips64r6el \
 		-s /usr/share/aoscbootstrap/scripts/reset-repo-cip.sh \
 		--include-files /usr/share/aoscbootstrap/recipes/$i.lst \
-		--export-tar os-mips64r6el/$i/aosc-os_${i}_$(date +%Y%m%d)_mips64r6el.tar.xz
+		--export-tar os-mips64r6el/$i/aosc-os_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.tar.xz
 	rm -rf $i
 
 	if [[ "$i" = "base" || \
@@ -24,10 +32,10 @@ for i in "$@"; do
 	      "$i" = "server" ]]; then
 		echo "Generating Qemu release: $i ..."
 		cd "$TBBUILDDIR"/aosc-mkrawimg
-		env TARBALL=/buildroots/cip/tbbuild/os-mips64r6el/base/aosc-os_base_20221111_mips64r6el.tar.xz \
+		env TARBALL="$TBBUILDDIR"/os-mips64r6el/$i/aosc-os_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.tar.xz \
 			DEVICE_NAME=boston \
 			SOLUTION=boston \
-			IMAGE_NAME="boston_${i}_$(date +%Y%m%d)_mips64r6el" \
+			IMAGE_NAME="boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}" \
 			./raw-image-builder
 
 		cd out
@@ -39,7 +47,7 @@ qemu-system-mips64el \\
 	-m 2G \\
 	-kernel $kern \\
 	-append "console=ttyS0,115200 root=/dev/sda1 rw loglevel=4" \\
-	-drive file=boston_${i}_$(date +%Y%m%d)_mips64r6el.img,format=raw \\
+	-drive file=boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.img,format=raw \\
 	-serial mon:stdio -nographic \\
 	-monitor telnet:127.0.0.1:55555,server,nowait \\
 	-device virtio-net-pci,netdev=net0r6,bus=pci.2 \\
@@ -52,7 +60,7 @@ qemu-system-mips64el \\
 	-m 2G \\
 	-kernel $kern \\
 	-append "console=ttyS0,115200 root=/dev/vda1 rw loglevel=4" \\
-	-drive file=boston_${i}_$(date +%Y%m%d)_mips64r6el.img,format=raw,id=hd0 \\
+	-drive file=boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.img,format=raw,id=hd0 \\
 	-device virtio-blk-device,drive=hd0 \\
 	-serial mon:stdio -nographic \\
 	-monitor telnet:127.0.0.1:55555,server,nowait \\
@@ -64,14 +72,14 @@ EOF
 		chmod -v +x start-qemu-*.sh
 
 		tar cvfJ \
-			"$TBBUILDDIR"/os-mips64r6el/${i}/rawimg/boston_${i}_$(date +%Y%m%d)_mips64r6el.tar.xz \
-			boston_${i}_$(date +%Y%m%d)_mips64r6el.img \
+			"$TBBUILDDIR"/os-mips64r6el/${i}/rawimg/boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.tar.xz \
+			boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.img \
 			vmlinux* \
 			start-qemu*.sh
 
 		cd "$TBBUILDDIR"/os-mips64r6el/${i}/rawimg
-		sha256sum boston_${i}_$(date +%Y%m%d)_mips64r6el.tar.xz \
-			> boston_${i}_$(date +%Y%m%d)_mips64r6el.tar.xz.sha256sum
+		sha256sum boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.tar.xz \
+			> boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.tar.xz.sha256sum
 
 		cd "$TBBUILDDIR"
 	fi
