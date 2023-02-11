@@ -17,7 +17,7 @@ fi
 
 for i in "$@"; do
 	echo "Generating system release: $i ..."
-	mkdir -pv os-mips64r6el/$i/rawimg
+	mkdir -pv os-mips64r6el/$i
 	rm -rf $i
 	aoscbootstrap $SUBREPO $i http://127.0.0.1:8080/debs/ \
 		--config /usr/share/aoscbootstrap/config/aosc-mainline.toml \
@@ -31,6 +31,8 @@ for i in "$@"; do
 	      "$i" = "desktop" || \
 	      "$i" = "server" ]]; then
 		echo "Generating Qemu release: $i ..."
+		mkdir -pv os-mips64r6el/$i/rawimg
+
 		cd "$TBBUILDDIR"/aosc-mkrawimg
 		env TARBALL="$TBBUILDDIR"/os-mips64r6el/$i/aosc-os_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.tar.xz \
 			DEVICE_NAME=boston \
