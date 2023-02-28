@@ -58,7 +58,6 @@ qemu-system-mips64el \\
 	-kernel $kern \\
 	-append "console=ttyS0,115200 root=/dev/vda1 rw loglevel=4 keep_bootcon mipsr2emu ieee754=relaxed" \\
 	-drive file=boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.img,format=raw,id=hd0 \\
-	-device virtio-blk-device,drive=hd0 \\
 	-serial mon:stdio -nographic \\
 	-monitor telnet:127.0.0.1:55555,server,nowait \\
 	-device virtio-net-pci,netdev=net0r6 \\
