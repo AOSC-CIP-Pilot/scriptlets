@@ -7,19 +7,14 @@ if [ ! -d "$TBBUILDDIR"/aosc-mkrawimg ]; then
 	git clone -b cip/boston https://github.com/AOSC-CIP-Pilot/aosc-mkrawimg
 fi
 
-if [[ "$MSA" != "1" ]]; then
-	MIPSR6ARCH=mips64r6el
-	SUBREPO=rolling
-else
-	MIPSR6ARCH=mips64r6el+msa
-	SUBREPO=rolling+msa
-fi
+MIPSR6ARCH=mips64r6el
+SUBREPO=stable
 
 for i in "$@"; do
 	echo "Generating system release: $i ..."
 	mkdir -pv os-mips64r6el/$i
 	rm -rf $i
-	aoscbootstrap $SUBREPO $i http://127.0.0.1:8080/debs/ \
+	aoscbootstrap $SUBREPO $i https://repo.aosc.io/debs/ \
 		--config /usr/share/aoscbootstrap/config/aosc-mainline.toml \
 		-x --arch mips64r6el \
 		-s /usr/share/aoscbootstrap/scripts/reset-repo-cip.sh \
@@ -48,7 +43,7 @@ qemu-system-mips64el \\
 	-M boston \\
 	-m 2G \\
 	-kernel $kern \\
-	-append "console=ttyS0,115200 root=/dev/sda1 rw loglevel=4" \\
+	-append "console=ttyS0,115200 root=/dev/sda1 rw loglevel=4 keep_bootcon mipsr2emu ieee754=relaxed" \\
 	-drive file=boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.img,format=raw \\
 	-serial mon:stdio -nographic \\
 	-monitor telnet:127.0.0.1:55555,server,nowait \\
@@ -61,7 +56,7 @@ qemu-system-mips64el \\
 	-M virt \\
 	-m 2G \\
 	-kernel $kern \\
-	-append "console=ttyS0,115200 root=/dev/vda1 rw loglevel=4" \\
+	-append "console=ttyS0,115200 root=/dev/vda1 rw loglevel=4 keep_bootcon mipsr2emu ieee754=relaxed" \\
 	-drive file=boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.img,format=raw,id=hd0 \\
 	-device virtio-blk-device,drive=hd0 \\
 	-serial mon:stdio -nographic \\
