@@ -67,6 +67,19 @@ EOF
 
 		chmod -v +x start-qemu-*.sh
 
+		echo > README << EOF
+Notes on the 'virt' Machine Type
+--------------------------------
+
+To start a Qemu instance using the 'virt' machine type, please use
+start-qemu-virt.sh. Please note that this script requires Qemu >= 7.2.0 and
+not-yet-upstreamed patches from FlyGoat's private tree.
+
+https://gitlab.com/FlyGoat/qemu (please use the 'cip_7.2' branch)
+
+These patches will be upstreamed in the near future.
+EOF
+
 		tar cvfJ \
 			"$TBBUILDDIR"/os-mips64r6el/${i}/rawimg/boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.tar.xz \
 			boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.img \
