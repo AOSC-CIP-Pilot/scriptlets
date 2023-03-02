@@ -42,6 +42,7 @@ for i in "$@"; do
 qemu-system-mips64el \\
 	-M boston \\
 	-m 2G \\
+	-cpu I6500 \\
 	-kernel $kern \\
 	-append "console=ttyS0,115200 root=/dev/sda1 rw loglevel=4 keep_bootcon mipsr2emu ieee754=relaxed" \\
 	-drive file=boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.img,format=raw \\
@@ -55,6 +56,7 @@ EOF
 qemu-system-mips64el \\
 	-M virt \\
 	-m 2G \\
+	-cpu I6500 \\
 	-kernel $kern \\
 	-append "console=ttyS0,115200 root=/dev/vda1 rw loglevel=4 keep_bootcon mipsr2emu ieee754=relaxed" \\
 	-drive file=boston_${i}_$(date +%Y%m%d)_${MIPSR6ARCH}.img,format=raw,id=hd0 \\
